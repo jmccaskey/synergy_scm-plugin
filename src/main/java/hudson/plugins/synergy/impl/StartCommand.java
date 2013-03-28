@@ -83,7 +83,7 @@ public class StartCommand extends Command {
 		
 		// Add "-n login" if login is set
 		// Unix commandline client does not support the "-n" option
-		if (login!=null && login.length()!=0 && !isRunningOnUnix) {
+		if (login!=null && login.length()!=0 && ( !isRunningOnUnix || isWebmodeSession)) {
 			list.add("-n");
 			list.add(login);
 		}
