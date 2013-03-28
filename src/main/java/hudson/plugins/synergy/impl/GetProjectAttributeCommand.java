@@ -24,7 +24,7 @@ public class GetProjectAttributeCommand extends Command {
 	}
 	@Override
 	public void parseResult(String result) {
-		this.value = result;
+		this.value = result.trim();
 	}
 	public String getValue() {
 		return value;
