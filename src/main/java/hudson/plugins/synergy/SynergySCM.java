@@ -673,6 +673,7 @@ public class SynergySCM extends SCM implements Serializable {
 		GetProjectStateCommand command = new GetProjectStateCommand(project);
 		getCommands().executeSynergyCommand(workspace, command);
 		String state = command.getState();
+		state = state.trim();
 
 		// Compute result.
 		if ("prep".equals(state)) {
