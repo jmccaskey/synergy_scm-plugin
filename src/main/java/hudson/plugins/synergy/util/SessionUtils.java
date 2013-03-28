@@ -104,9 +104,10 @@ public class SessionUtils {
 		boolean remoteClient = synergySCM.isRemoteClient();
 		String pathName = synergySCM.getDescriptor().getPathName();
 		String engine = synergySCM.getEngine();
+                boolean isUnix = commands.getLauncher().isUnix();
 		
 		// Start Synergy.		
-		StartCommand startCommand = new StartCommand(database, engine, username, password, remoteClient, pathName);
+		StartCommand startCommand = new StartCommand(database, engine, username, password, remoteClient, pathName, isUnix);
 		commands.executeSynergyCommand(path, startCommand);
 		ccmAddr = startCommand.getCcmAddr();
 		startCommand.addCcmAddrToSessionMapFile(ccmSessionMapFile);

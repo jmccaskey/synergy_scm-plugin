@@ -1,6 +1,10 @@
 package hudson.plugins.synergy.impl;
 
 import hudson.FilePath;
+import hudson.model.Executor;
+import hudson.model.Node;
+import hudson.slaves.SlaveComputer;
+import hudson.Launcher;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +45,7 @@ public class StartCommand extends Command {
 	 * @param remoteClient	Use remote client flag
 	 * @param pathName      The path name
 	 */
-	public StartCommand(String database, String engine, String login, String password, boolean remoteClient, String pathName) {
+	public StartCommand(String database, String engine, String login, String password, boolean remoteClient, String pathName, boolean isUnix) {
 		this.database = database;
 		this.engine = engine;
 		this.login = login;
@@ -54,9 +58,8 @@ public class StartCommand extends Command {
 		if (re_webmode.matcher(engine).matches()){
 			isWebmodeSession = true;
 		}
-
-		// TODO: implement a better way to detect unix runtime environment
-		if (System.getProperty("file.separator").equals("/")){
+                
+		if (isUnix){
 			isRunningOnUnix = true;
 		}
 	}
