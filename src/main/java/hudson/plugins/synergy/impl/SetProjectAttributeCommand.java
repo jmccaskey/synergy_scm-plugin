@@ -15,7 +15,7 @@ public class SetProjectAttributeCommand extends Command {
 	}
 	@Override
 	public String[] buildCommand(String ccmExe) {	
-		String[] commands = new String[]{ccmExe, "attr", "-m", attribute, "-v", value, "-project", project};
+		String[] commands = new String[]{ccmExe, "attr", "-m", attribute, "-v", value.replace("\\", "/"), "-project", project};
 
 		/* 
 		 * Due to a bug in Synergy 7, setting attribute maintain_wa by "ccm attr" does not work with web communication mode.
