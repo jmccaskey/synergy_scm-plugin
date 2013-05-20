@@ -17,7 +17,7 @@ public class GetProjectStateCommand extends Command {
 	}
 	@Override
 	public void parseResult(String result) {
-		this.state = result;
+		this.state = result.trim();
 	}
 	public String getState() {
 		return state;
