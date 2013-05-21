@@ -6,17 +6,17 @@ package hudson.plugins.synergy.impl;
 public class GetProjectGroupingCommand extends Command {
 	private String release;	
 	private String memberStatus;
-	private String subsystem;
+	private String owner;
 	private String projectGrouping;
 	
-	public GetProjectGroupingCommand(String release, String memberStatus, String subsystem) {
+	public GetProjectGroupingCommand(String release, String memberStatus, String owner) {
 		this.release = release;
 		this.memberStatus = memberStatus;
-		this.subsystem = subsystem;
+		this.owner = owner;
 	}
 	@Override
 	public String[] buildCommand(String ccmExe) {	
-		String[] commands = new String[] { ccmExe, "query", "-u", "-f", "%objectname", "type='project_grouping' and release='" + release + "' and member_status='" + memberStatus + "' and subsystem='" + subsystem + "'"};
+		String[] commands = new String[] { ccmExe, "query", "-u", "-f", "%objectname", "type='project_grouping' and release='" + release + "' and member_status='" + memberStatus + "' and owner='" + owner + "'"};
 		return commands;			
 	}
 	@Override

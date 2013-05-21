@@ -888,13 +888,13 @@ public class SynergySCM extends SCM implements Serializable {
 			String state = stateCommand.getState();
 			
 			// Determine instance for project grouping
-			String subsystem;
+			String owner;
 			if ("working".equals(state)) {
 				GetProjectOwnerCommand ownerCommand = new GetProjectOwnerCommand(projectName);
 				getCommands().executeSynergyCommand(workarea, ownerCommand);
-				subsystem = ownerCommand.getOwner();
+				owner = ownerCommand.getOwner();
 			} else {
-				subsystem = "1";				
+				owner = "1";				
 			}
 
 			// Get project grouping release and purpose
@@ -909,7 +909,7 @@ public class SynergySCM extends SCM implements Serializable {
 			String memberStatus = statusCommand.getMemberStatus();
 			
 			// Get project grouping object
-			GetProjectGroupingCommand findCommand = new GetProjectGroupingCommand(pgRelease, memberStatus, subsystem);
+			GetProjectGroupingCommand findCommand = new GetProjectGroupingCommand(pgRelease, memberStatus, owner);
 			getCommands().executeSynergyCommand(workarea, findCommand);
 			String projectGrouping = findCommand.getProjectGrouping();
 			
