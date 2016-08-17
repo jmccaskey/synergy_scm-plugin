@@ -47,6 +47,8 @@ import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import static hudson.Util.fixEmpty;
+import hudson.scm.PollingResult;
+import hudson.scm.SCMRevisionState;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -115,39 +117,6 @@ public class SynergySCM extends SCM implements Serializable {
 		private DescriptorImpl() {
 			super(SynergySCM.class, null);
 			load();
-		}
-
-		@Override
-		public boolean configure(StaplerRequest request, JSONObject formData) throws FormException {
-			ccmExe = request.getParameter("synergy.ccmExe");
-			ccmUiLog = request.getParameter("synergy.ccmUiLog");
-			ccmEngLog = request.getParameter("synergy.ccmEngLog");
-			pathName = request.getParameter("synergy.pathName");
-			save();
-			return true;
-		}
-
-		@Override
-		public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			return new SynergySCM(
-					req.getParameter("synergy.project"), 
-					req.getParameter("synergy.database"), 
-					req.getParameter("synergy.release"), 
-					req.getParameter("synergy.purpose"), 
-					req.getParameter("synergy.username"), 
-					req.getParameter("synergy.password"), 
-					req.getParameter("synergy.engine"), 
-					req.getParameter("synergy.oldProject"), 
-					req.getParameter("synergy.baseline"), 
-					req.getParameter("synergy.oldBaseline"), 
-					req.getParameter("synergy.ccmHome"),
-					"true".equals(req.getParameter("synergy.remoteClient")), 
-					"true".equals(req.getParameter("synergy.detectConflict")), 
-					"true".equals(req.getParameter("synergy.replaceSubprojects")), 
-					"true".equals(req.getParameter("synergy.checkForUpdateWarnings")),
-					"true".equals(req.getParameter("synergy.leaveSessionOpen")),
-					"true".equals(req.getParameter("synergy.maintainWorkarea")),
-					"true".equals(req.getParameter("synergy.checkTaskModifiedObjects")));
 		}
 
 		/**
@@ -1032,25 +1001,27 @@ public class SynergySCM extends SCM implements Serializable {
 		return DescriptorImpl.DESCRIPTOR;
 	}
 
-	@Override
-	public boolean pollChanges(AbstractProject project, Launcher launcher, FilePath path, TaskListener listener) throws IOException, InterruptedException {
-		// Get last build.
-		AbstractBuild lastBuild = (AbstractBuild) project.getLastBuild();
+    @Override public boolean requiresWorkspaceForPolling() {
+        return true;
+    }
 
+    private static final class SynergyRevisionState extends SCMRevisionState {
+        final Calendar date;
+        SynergyRevisionState(Calendar date) {
+            this.date = date;
+        }
+    }
+
+    @Override public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> build, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
+        return new SynergyRevisionState(build.getTimestamp());
+    }
+
+    @Override protected PollingResult compareRemoteRevisionWith(AbstractProject<?, ?> project, Launcher launcher, FilePath path, TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 		// Check release.
 		if (release == null) {
 			listener.getLogger().println("The release attribute is not set. It is required for change pooling.");
-			return false;
+			return PollingResult.NO_CHANGES;
 		}
-
-		// No last build, build one now.
-		if (lastBuild == null) {
-			listener.getLogger().println("No existing build. Starting a new one");
-			return true;
-		}
-
-		// Get last build date.
-		Calendar date = lastBuild.getTimestamp();
 
 		// Configure commands.
 		setCommands(null);
@@ -1059,28 +1030,28 @@ public class SynergySCM extends SCM implements Serializable {
 			setCommands(SessionUtils.openSession(path, this, listener, launcher));
 
 			// Find completed tasks.
-			FindCompletedSinceDateCommand findCommand = new FindCompletedSinceDateCommand(date, release);
+			FindCompletedSinceDateCommand findCommand = new FindCompletedSinceDateCommand(((SynergyRevisionState) baseline).date, release);
 			getCommands().executeSynergyCommand(path, findCommand);
 			List<String> result = findCommand.getTasks();
 
 			if (checkTaskModifiedObjects) {
-			    return checkTaskModifiedObjects(result, path);
+			    return checkTaskModifiedObjects(result, path) ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
 			} else {
-			    return result != null && !result.isEmpty();
+			    return result != null && !result.isEmpty() ? PollingResult.SIGNIFICANT : PollingResult.NO_CHANGES;
 			}
 		} catch (SynergyException e) {
-			return false;
+			return PollingResult.NO_CHANGES;
 		} finally {
-			// Stop Synergy			
+			// Stop Synergy
 			try {
 				SessionUtils.closeSession(path, this, getCommands());
 				setCommands(null);
 			} catch (SynergyException e) {
 				setCommands(null);
-				return false;
+				return PollingResult.NO_CHANGES;
 			}
 		}
-	}
+    }
 	
 	/**
 	 * Check if the specified taks modify the current project.
@@ -1138,8 +1109,8 @@ public class SynergySCM extends SCM implements Serializable {
 		return username;
 	}
 
-	public String getPassword() {
-        return password!=null ? password.toString() : null;
+	public Secret getPassword() {
+        return password;
 	}
 
 	public String getRelease() {

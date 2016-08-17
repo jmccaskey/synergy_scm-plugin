@@ -33,7 +33,7 @@ public class StartCommand extends Command {
 	
 	private transient int passwordIndex = -1;
 	private boolean isWebmodeSession;
-	private boolean isRunningOnUnix = false;
+	private final boolean isRunningOnUnix;
 
 	/**
 	 * Builds a start session command. 
@@ -58,7 +58,6 @@ public class StartCommand extends Command {
 		if (re_webmode.matcher(engine).matches()){
 			isWebmodeSession = true;
 		}
-                
 		if (isUnix){
 			isRunningOnUnix = true;
 		}
